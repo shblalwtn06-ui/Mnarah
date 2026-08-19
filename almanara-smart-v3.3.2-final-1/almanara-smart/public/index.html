@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>المنارة الذكي | نقطة البيع</title>
+<meta name="theme-color" content="#2563eb" />
+<link rel="manifest" href="/manifest.json" />
+<link rel="icon" href="/icons/icon-192.png" />
+<link rel="stylesheet" href="/css/styles.css" />
+</head>
+<body>
+
+<!-- الشريط العلوي - بند 4.2 -->
+<header class="topbar">
+  <div class="topbar__right">
+    <span class="badge" id="shiftBadge">وردية: —</span>
+    <span class="badge badge--status" id="serverStatusBadge">خادم الفرع: <b>...</b></span>
+    <span class="badge badge--status" id="internetStatusBadge">الإنترنت: <b>...</b></span>
+  </div>
+  <div class="topbar__left">
+    <span id="userNameLabel">—</span>
+    <button class="icon-btn" id="themeToggleBtn" title="تبديل الثيم" aria-label="تبديل الثيم">🌓</button>
+    <button class="icon-btn" id="logoutBtn" title="تسجيل الخروج" aria-label="تسجيل الخروج">🚪</button>
+  </div>
+</header>
+
+<!-- شريط تنقل رئيسي (Role-based UI) -->
+<nav class="tabbar" id="mainTabbar">
+  <button class="tab active" data-view="pos">🧾 نقطة البيع</button>
+  <button class="tab" data-view="dashboard">📊 لوحة التحكم</button>
+  <button class="tab" data-view="products" data-requires="canManageInventory">📦 المنتجات</button>
+  <button class="tab" data-view="customers">👥 العملاء</button>
+  <button class="tab" data-view="suppliers" data-requires="canManageInventory">🚚 الموردون</button>
+  <button class="tab" data-view="purchases" data-requires="canManageInventory">🛒 المشتريات</button>
+  <button class="tab" data-view="inventory" data-requires="canManageInventory">📥 المخزون</button>
+  <button class="tab" data-view="invoices">📄 الفواتير</button>
+  <button class="tab" data-view="returns">↩️ المرتجعات</button>
+  <button class="tab" data-view="reports" data-requires="canViewReports">📈 التقارير</button>
+  <button class="tab" data-view="shifts">🕒 الورديات</button>
+  <button class="tab" data-view="expenses" data-role="admin,manager,accountant">💸 المصروفات</button>
+  <button class="tab" data-view="paymentMethods" data-role="admin,manager">💳 وسائل الدفع</button>
+  <button class="tab" data-view="accounting" data-role="admin,manager,accountant">📚 المحاسبة</button>
+  <button class="tab" data-view="ledger" data-role="admin,manager,accountant">📖 دفتر الأستاذ</button>
+  <button class="tab" data-view="drawer" data-role="admin,manager,accountant">💵 الخرج اليومي</button>
+  <button class="tab" data-view="settings" data-role="admin,manager">⚙️ الإعدادات</button>
+</nav>
+
+<!-- شاشة تسجيل الدخول -->
+<main id="loginView" class="view login-view">
+  <form id="loginForm" class="login-card">
+    <h1>المنارة الذكي</h1>
+    <p class="login-sub">نظام نقاط البيع المتكامل v3.3</p>
+    <label>اسم المستخدم
+      <input type="text" id="loginUsername" required autocomplete="username" />
+    </label>
+    <label>كلمة المرور
+      <input type="password" id="loginPassword" required autocomplete="current-password" />
+    </label>
+    <div id="totpField" class="hidden">
+      <label>رمز التحقق الثنائي
+        <input type="text" id="loginTotp" inputmode="numeric" maxlength="6" />
+      </label>
+    </div>
+    <button type="submit" class="btn btn--primary btn--huge">دخول</button>
+    <p class="login-error" id="loginError"></p>
+  </form>
+</main>
+
+<!-- شاشة نقطة البيع - بند 4.3 -->
+<main id="posView" class="view pos-view hidden">
+  <section class="pos-search-row">
+    <input type="text" id="posSearchInput" class="search-input" placeholder="ابحث بالاسم أو الباركود أو رقم المنتج..." autofocus />
+    <button class="icon-btn icon-btn--camera" id="cameraScanBtn" title="مسح بالكاميرا">📷</button>
+  </section>
+
+  <section class="pos-top-products">
+    <h3 class="section-label">⭐ المنتجات الأكثر مبيعًا</h3>
+    <div id="topProductsGrid" class="products-grid"></div>
+  </section>
+
+  <div id="searchResultsPanel" class="search-results hidden"></div>
+
+  <section class="pos-main-grid">
+    <div class="cart-panel">
+      <h3 class="section-label">السلة</h3>
+      <div id="cartItems" class="cart-items"></div>
+      <button class="btn btn--danger btn--block" id="clearCartBtn">🗑️ إفراغ السلة</button>
+      <div class="cart-totals">
+        <div class="total-row"><span>المجموع</span><span id="cartSubtotal">0.00</span></div>
+        <div class="total-row"><span>الخصم</span><span id="cartDiscount">0.00</span></div>
+        <div class="total-row total-row--big"><span>الإجمالي</span><span id="cartTotal">0.00</span></div>
+      </div>
+    </div>
+
+    <div class="payment-panel">
+      <label class="customer-select-label">العميل (للبيع الآجل)
+        <select id="customerSelect">
+          <option value="">— بيع نقدي عام —</option>
+        </select>
+      </label>
+
+      <div class="payment-methods-grid" id="paymentMethodsGrid"></div>
+
+      <div id="paymentAmountEntry" class="payment-amount-entry hidden">
+        <label>المبلغ <input type="number" id="paymentAmountInput" min="0" step="0.01" /></label>
+        <label>رقم المرجع (اختياري) <input type="text" id="paymentRefInput" /></label>
+        <button class="btn btn--primary" id="addPaymentBtn">إضافة الدفعة</button>
+      </div>
+
+      <div id="paymentsList" class="payments-list"></div>
+
+      <div class="remaining-row">
+        <span>المتبقي</span>
+        <span id="remainingAmount" class="remaining-amount">0.00</span>
+      </div>
+
+      <div id="offlineBanner" class="offline-banner hidden">⚠️ فاتورة غير مُزامَنة — رقمها مؤقت</div>
+
+      <button class="btn btn--success btn--huge btn--block" id="completeSaleBtn" disabled>💵 إتمام البيع</button>
+    </div>
+  </section>
+</main>
+
+<!-- لوحة التحكم Dashboard - بند 4.4 -->
+<main id="dashboardView" class="view hidden">
+  <h2 class="page-title">لوحة التحكم</h2>
+  <div class="kpi-grid" id="kpiGrid"></div>
+  <div class="charts-grid">
+    <div class="chart-card"><h4>مبيعات آخر 7 أيام</h4><canvas id="salesChart" height="220"></canvas></div>
+    <div class="chart-card"><h4>توزيع المبيعات حسب التصنيف</h4><canvas id="categoryChart" height="220"></canvas></div>
+    <div class="chart-card"><h4>أعلى المنتجات مبيعًا</h4><canvas id="topProductsChart" height="220"></canvas></div>
+  </div>
+  <div class="alerts-grid">
+    <div class="alert-card" id="expiringAlertsCard"><h4>⏰ منتجات قاربت انتهاء الصلاحية</h4><ul id="expiringList"></ul></div>
+    <div class="alert-card" id="lowStockAlertsCard"><h4>📉 مخزون منخفض</h4><ul id="lowStockList"></ul></div>
+    <div class="alert-card" id="creditAlertsCard"><h4>🚫 عملاء تجاوزوا حد الائتمان</h4><ul id="creditAlertsList"></ul></div>
+    <div class="alert-card" id="syncAlertsCard"><h4>🔄 فواتير غير مُزامَنة / تعارضات</h4><ul id="syncAlertsList"></ul></div>
+  </div>
+</main>
+
+<!-- تفاصيل Drill-down عائمة -->
+<div id="drilldownModal" class="modal hidden">
+  <div class="modal__content">
+    <button class="modal__close" id="drilldownCloseBtn">✕</button>
+    <div id="drilldownBody"></div>
+  </div>
+</div>
+
+<!-- عناصر عامة أخرى (منتجات/عملاء/موردون/مخزون/فواتير/تقارير/ورديات/إعدادات) تُحمَّل ديناميكيًا -->
+<main id="genericView" class="view hidden">
+  <div id="genericViewContent"></div>
+</main>
+
+<!-- عناصر صوتية للتغذية الراجعة - بند 3.2 -->
+<div id="toastContainer" class="toast-container"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js" defer></script>
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js" defer></script>
+<script src="/js/offline.js" defer></script>
+<script src="/js/app.js" defer></script>
+<script src="/js/pos.js" defer></script>
+<script src="/js/dashboard.js" defer></script>
+</body>
+</html>

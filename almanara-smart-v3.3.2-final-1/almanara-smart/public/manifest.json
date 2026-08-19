@@ -1,0 +1,16 @@
+{
+  "name": "المنارة الذكي - نظام نقاط البيع",
+  "short_name": "المنارة الذكي",
+  "description": "نظام نقاط البيع المتكامل Hybrid Offline v3.3",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#f4f6f9",
+  "theme_color": "#2563eb",
+  "dir": "rtl",
+  "lang": "ar",
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}
